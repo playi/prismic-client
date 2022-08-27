@@ -1,8 +1,9 @@
 import { it, expect } from "vitest";
 
-import { mockPrismicRestAPIV2 } from "./__testutils__/mockPrismicRestAPIV2";
 import { createTestClient } from "./__testutils__/createClient";
 import { getMasterRef } from "./__testutils__/getMasterRef";
+import { mockPrismicRestAPIV2 } from "./__testutils__/mockPrismicRestAPIV2";
+import { testAbortableMethod } from "./__testutils__/testAbortableMethod";
 
 import * as prismic from "../src";
 
@@ -120,4 +121,8 @@ it("merges params and default params if provided", async (ctx) => {
 	expect(url.host).toBe(new URL(client.endpoint).host);
 	expect(url.pathname).toBe("/api/v2/documents/search");
 	expect(url.searchParams.toString()).toBe(expectedSearchParams.toString());
+});
+
+testAbortableMethod("is abortable with an AbortController", {
+	run: (client, signal) => client.buildQueryURL({ signal }),
 });

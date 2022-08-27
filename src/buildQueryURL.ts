@@ -1,6 +1,6 @@
 import { castArray } from "./lib/castArray";
 
-import { ValueOf, Ordering, Route } from "./types";
+import { Ordering, Route } from "./types";
 
 /**
  * Parameters for the Prismic REST API V2.
@@ -15,6 +15,20 @@ export interface QueryParams {
 	 * {@link https://user-guides.prismic.io/en/articles/1036153-generating-an-access-token}
 	 */
 	accessToken?: string;
+
+	/**
+	 * Ref used to query documents.
+	 *
+	 * {@link https://prismic.io/docs/technologies/introduction-to-the-content-query-api#prismic-api-ref}
+	 */
+	ref: string;
+
+	/**
+	 * Ref used to populate Integration Fields with the latest content.
+	 *
+	 * {@link https://prismic.io/docs/core-concepts/integration-fields}
+	 */
+	integrationFieldsRef?: string;
 
 	/**
 	 * The `pageSize` parameter defines the maximum number of documents that the
@@ -101,64 +115,12 @@ export interface QueryParams {
  */
 type BuildQueryURLParams = {
 	/**
-	 * Ref used to query documents.
-	 *
-	 * {@link https://prismic.io/docs/technologies/introduction-to-the-content-query-api#prismic-api-ref}
-	 */
-	ref: string;
-
-	/**
-	 * Ref used to populate Integration Fields with the latest content.
-	 *
-	 * {@link https://prismic.io/docs/core-concepts/integration-fields}
-	 */
-	integrationFieldsRef?: string;
-
-	/**
 	 * One or more predicates to filter documents for the query.
 	 *
 	 * {@link https://prismic.io/docs/technologies/query-predicates-reference-rest-api}
 	 */
 	predicates?: string | string[];
 };
-
-/**
- * Parameters in this map have been renamed from the official Prismic REST API
- * V2 specification for better developer ergonomics.
- *
- * These parameters are renamed to their mapped value.
- */
-const RENAMED_PARAMS = {
-	accessToken: "access_token",
-} as const;
-
-/**
- * A valid parameter name for the Prismic REST API V2.
- */
-type ValidParamName =
-	| Exclude<
-			keyof QueryParams,
-			keyof typeof RENAMED_PARAMS | keyof BuildQueryURLParams
-	  >
-	| ValueOf<typeof RENAMED_PARAMS>;
-
-/**
- * Converts an Ordering to a string that is compatible with Prismic's REST API.
- * If the value provided is already a string, no conversion is performed.
- *
- * @param ordering - Ordering to convert.
- *
- * @returns String representation of the Ordering.
- */
-const castOrderingToString = (ordering: Ordering | string): string =>
-	typeof ordering === "string"
-		? ordering
-		: [
-				ordering.field,
-				ordering.direction === "desc" ? ordering.direction : undefined,
-		  ]
-				.filter(Boolean)
-				.join(" ");
 
 export type BuildQueryURLArgs = QueryParams & BuildQueryURLParams;
 
@@ -196,25 +158,25 @@ export const buildQueryURL = (
 	// Iterate over each parameter and add it to the URL. In some cases, the
 	// parameter value needs to be transformed to fit the REST API.
 	for (const k in params) {
-		const name = (RENAMED_PARAMS[k as keyof typeof RENAMED_PARAMS] ??
-			k) as ValidParamName;
-
+		const name = k === "accessToken" ? "access_token" : k;
 		let value = params[k as keyof typeof params];
 
-		if (name === "orderings") {
-			const scopedValue = params[name];
+		if (name === "orderings" && value != null) {
+			const v = castArray(value as Ordering | Ordering[])
+				.map((ordering) => {
+					if (typeof ordering === "string") {
+						return ordering;
+					} else {
+						return (
+							ordering.field + (ordering.direction === "desc" ? " desc" : "")
+						);
+					}
+				})
+				.join(",");
 
-			if (scopedValue != null) {
-				const v = castArray(scopedValue)
-					.map((ordering) => castOrderingToString(ordering))
-					.join(",");
-
-				value = `[${v}]`;
-			}
-		} else if (name === "routes") {
-			if (typeof params[name] === "object") {
-				value = JSON.stringify(castArray(params[name]));
-			}
+			value = `[${v}]`;
+		} else if (name === "routes" && typeof value === "object") {
+			value = JSON.stringify(castArray(params[name]));
 		}
 
 		if (value != null) {

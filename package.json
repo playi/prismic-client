@@ -21,12 +21,11 @@
 	"exports": {
 		".": {
 			"require": "./dist/index.cjs",
-			"import": "./dist/index.js"
-		},
-		"./package.json": "./package.json"
+			"import": "./dist/index.mjs"
+		}
 	},
 	"main": "dist/index.cjs",
-	"module": "dist/index.js",
+	"module": "dist/index.mjs",
 	"react-native": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"files": [
@@ -34,8 +33,8 @@
 		"src"
 	],
 	"scripts": {
-		"build": "siroc build",
-		"dev": "siroc build --watch",
+		"build": "unbuild",
+		"dev": "unbuild --stub",
 		"format": "prettier --write README.md .eslintrc.cjs ava.config.js package.json tsconfig.json {src,examples,test}/**",
 		"lint": "eslint --ext .js,.ts .",
 		"prepare": "npm run build",
@@ -69,10 +68,10 @@
 		"nyc": "^15.1.0",
 		"prettier": "^2.7.1",
 		"prettier-plugin-jsdoc": "^0.3.38",
-		"siroc": "^0.16.0",
 		"size-limit": "^8.0.1",
 		"standard-version": "^9.5.0",
 		"typescript": "^4.7.4",
+		"unbuild": "^0.8.9",
 		"vitest": "^0.22.1"
 	},
 	"engines": {
