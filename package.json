@@ -49,7 +49,7 @@
 		"unit:watch": "vitest watch"
 	},
 	"dependencies": {
-		"@prismicio/helpers": "^2.3.8",
+		"@prismicio/helpers": "github:playi/prismic-helpers#v2.3.9-es6",
 		"@prismicio/types": "^0.2.7"
 	},
 	"devDependencies": {
